@@ -22,7 +22,6 @@ public class PlayerController : MonoBehaviour
 
     [Header("Jump")]
     [SerializeField] private float jumpForce = 7f;
-    [SerializeField] private float jumpCooldown = 0.1f;
 
     [Header("Rotation")]
     [SerializeField] private float rotationSmoothTime = 0.1f;
@@ -35,7 +34,6 @@ public class PlayerController : MonoBehaviour
     private float currentSpeed = 0f;
     private float targetSpeed = 0f;
     private float animationSpeed = 0f;
-    private float lastJumpTime = -10f;
     private float rotationVelocity = 0f;
     private float animationSpeedVelocity = 0f;
 
@@ -47,45 +45,36 @@ public class PlayerController : MonoBehaviour
         if (inputHandler == null) inputHandler = GetComponent<PlayerInputHandler>();
         if (cameraTransform == null) cameraTransform = Camera.main?.transform;
 
-        if (inputHandler != null)
-            inputHandler.JumpPressed += OnJumpRequested;
-
         rb.linearDamping = 0f;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
-    }
-
-    private void OnDisable()
-    {
-        if (inputHandler != null)
-            inputHandler.JumpPressed -= OnJumpRequested;
-    }
-
-    private void OnJumpRequested()
-    {
-        if (Time.time - lastJumpTime < jumpCooldown) return;
-
-        if (!groundChecker.IsGrounded)
-        {
-            Debug.Log("Jump blocked: not grounded");
-            return;
-        }
-
-        lastJumpTime = Time.time;
-
-        Vector3 vel = rb.linearVelocity;
-        rb.linearVelocity = new Vector3(vel.x, jumpForce, vel.z);
-
-        if (HasValidAnimator())
-            animator.SetTrigger("JumpTrigger");
     }
 
     private void FixedUpdate()
     {
         groundChecker.UpdateGroundCheck();
         HandleMovement();
+        HandleJump();
         ApplyVelocity();
         UpdateAnimations();
+    }
+
+    private void HandleJump()
+    {
+        if (inputHandler == null) return;
+        if (!inputHandler.ConsumeJump()) return;
+        if (!groundChecker.IsGrounded)
+        {
+            Debug.Log("Jump blocked: not grounded");
+            return;
+        }
+
+        Vector3 vel = rb.linearVelocity;
+        rb.linearVelocity = new Vector3(vel.x, jumpForce, vel.z);
+        Debug.Log("Jumped! velocity.y = " + jumpForce);
+
+        if (HasValidAnimator())
+            animator.SetTrigger("JumpTrigger");
     }
 
     private void HandleMovement()

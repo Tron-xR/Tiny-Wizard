@@ -53,6 +53,9 @@ public class PlayerInputHandler : MonoBehaviour
     public System.Action CastSpellPressed;
     public System.Action PausePressed;
 
+    // Polled jump flag (consumed once per press — more reliable than events for physics)
+    private bool jumpRequested = false;
+
     private void OnEnable()
     {
         if (playerInput == null)
@@ -149,8 +152,23 @@ public class PlayerInputHandler : MonoBehaviour
     private void OnSprintStarted(InputAction.CallbackContext context) => IsSprinting = true;
     private void OnSprintCanceled(InputAction.CallbackContext context) => IsSprinting = false;
 
+    /// <summary>
+    /// Returns true once per jump press. Call from FixedUpdate.
+    /// More reliable than event subscription for physics-timed actions.
+    /// </summary>
+    public bool ConsumeJump()
+    {
+        if (jumpRequested)
+        {
+            jumpRequested = false;
+            return true;
+        }
+        return false;
+    }
+
     private void OnJumpPerformed(InputAction.CallbackContext context)
     {
+        jumpRequested = true;
         OnJump?.Invoke();
         JumpPressed?.Invoke();
     }

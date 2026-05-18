@@ -1,38 +1,23 @@
 using UnityEngine;
 
-/// <summary>
-/// Handles ground detection using raycasts.
-/// Determines if the player is grounded and provides ground hit information.
-/// </summary>
 public class GroundChecker : MonoBehaviour
 {
     [Header("Ground Detection")]
-    [SerializeField] private float raycastDistance = 0.2f;
+    [SerializeField] private float raycastDistance = 0.3f;
     [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private Vector3 raycastOffset = Vector3.zero;
-    
+
     [Header("Ground Settings")]
     [SerializeField] private int raycastCount = 3;
     [SerializeField] private float raycastRadius = 0.3f;
-    
+
     private Rigidbody rb;
     private Collider playerCollider;
     private bool isGrounded;
-    private bool wasGrounded;
     private RaycastHit groundHit;
-    private const float GROUND_BUFFER_TIME = 0.05f;
-    private const float SKIN_OFFSET = 0.05f;
-    private float lastGroundedTime = -10f;
     private Vector3 bottomOffset = Vector3.zero;
+    private const float SKIN_OFFSET = 0.05f;
 
-    /// <summary>
-    /// Returns true if the player is currently grounded.
-    /// </summary>
     public bool IsGrounded => isGrounded;
-    
-    /// <summary>
-    /// Returns the raycast hit information from the ground.
-    /// </summary>
     public RaycastHit GroundHit => groundHit;
 
     private void OnEnable()
@@ -51,22 +36,18 @@ public class GroundChecker : MonoBehaviour
             groundLayer = ~0;
     }
 
-    /// <summary>
-    /// Checks if player is grounded using multiple raycasts.
-    /// Should be called before physics calculations.
-    /// </summary>
     public void UpdateGroundCheck()
     {
+        Vector3 rayOrigin = rb.position + bottomOffset;
         bool foundGround = false;
-        Vector3 rayOrigin = rb.position + bottomOffset + raycastOffset;
 
         for (int i = 0; i < raycastCount; i++)
         {
             float angle = (360f / raycastCount) * i;
-            Vector3 rayDirection = Quaternion.Euler(0, angle, 0) * Vector3.forward;
-            Vector3 rayStartPos = rayOrigin + rayDirection * raycastRadius;
+            Vector3 dir = Quaternion.Euler(0, angle, 0) * Vector3.forward;
+            Vector3 start = rayOrigin + dir * raycastRadius;
 
-            if (Physics.Raycast(rayStartPos, Vector3.down, out RaycastHit hit, raycastDistance, groundLayer))
+            if (Physics.Raycast(start, Vector3.down, out RaycastHit hit, raycastDistance, groundLayer))
             {
                 foundGround = true;
                 groundHit = hit;
@@ -83,30 +64,42 @@ public class GroundChecker : MonoBehaviour
             }
         }
 
-        if (foundGround)
-            lastGroundedTime = Time.time;
+        if (!foundGround && playerCollider != null)
+        {
+            Collider[] hits = Physics.OverlapSphere(rayOrigin + Vector3.down * 0.1f, 0.15f, groundLayer);
+            if (hits.Length > 0)
+            {
+                foundGround = true;
+                for (int i = 0; i < hits.Length; i++)
+                {
+                    if (hits[i] != playerCollider)
+                    {
+                        groundHit = new RaycastHit();
+                        break;
+                    }
+                }
+            }
+        }
 
-        isGrounded = foundGround || (Time.time - lastGroundedTime < GROUND_BUFFER_TIME);
-        wasGrounded = isGrounded;
+        isGrounded = foundGround;
     }
 
-    /// <summary>
-    /// Visualize raycast in editor for debugging.
-    /// </summary>
     private void OnDrawGizmosSelected()
     {
-        Vector3 rayOrigin = transform.position + bottomOffset + raycastOffset;
+        Vector3 origin = transform.position + bottomOffset;
         Gizmos.color = isGrounded ? Color.green : Color.red;
-        Gizmos.DrawLine(rayOrigin, rayOrigin + Vector3.down * raycastDistance);
+        Gizmos.DrawLine(origin, origin + Vector3.down * raycastDistance);
 
-        // Draw raycast circle
         Gizmos.color = Color.yellow;
         for (int i = 0; i < raycastCount; i++)
         {
             float angle = (360f / raycastCount) * i;
-            Vector3 rayDirection = Quaternion.Euler(0, angle, 0) * Vector3.forward;
-            Vector3 rayStartPos = rayOrigin + rayDirection * raycastRadius;
-            Gizmos.DrawLine(rayStartPos, rayStartPos + Vector3.down * raycastDistance);
+            Vector3 dir = Quaternion.Euler(0, angle, 0) * Vector3.forward;
+            Vector3 start = origin + dir * raycastRadius;
+            Gizmos.DrawLine(start, start + Vector3.down * raycastDistance);
         }
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(origin + Vector3.down * 0.1f, 0.15f);
     }
 }
