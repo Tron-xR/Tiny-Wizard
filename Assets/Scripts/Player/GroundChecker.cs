@@ -16,11 +16,13 @@ public class GroundChecker : MonoBehaviour
     [SerializeField] private float raycastRadius = 0.3f;
     
     private Rigidbody rb;
+    private Collider playerCollider;
     private bool isGrounded;
     private bool wasGrounded;
     private RaycastHit groundHit;
     private const float GROUND_BUFFER_TIME = 0.05f;
     private float lastGroundedTime = -10f;
+    private Vector3 bottomOffset = Vector3.zero;
 
     /// <summary>
     /// Returns true if the player is currently grounded.
@@ -35,6 +37,14 @@ public class GroundChecker : MonoBehaviour
     private void OnEnable()
     {
         rb = GetComponent<Rigidbody>();
+        playerCollider = GetComponent<Collider>();
+
+        if (playerCollider is CapsuleCollider capsule)
+            bottomOffset = Vector3.down * (capsule.height * 0.5f - capsule.center.y);
+        else if (playerCollider is BoxCollider box)
+            bottomOffset = Vector3.down * (box.size.y * 0.5f - box.center.y);
+        else if (playerCollider is SphereCollider sphere)
+            bottomOffset = Vector3.down * sphere.radius;
 
         if (groundLayer == 0)
             groundLayer = ~0;
@@ -47,7 +57,7 @@ public class GroundChecker : MonoBehaviour
     public void UpdateGroundCheck()
     {
         bool foundGround = false;
-        Vector3 rayOrigin = rb.position + raycastOffset;
+        Vector3 rayOrigin = rb.position + bottomOffset + raycastOffset;
 
         for (int i = 0; i < raycastCount; i++)
         {
@@ -84,7 +94,7 @@ public class GroundChecker : MonoBehaviour
     /// </summary>
     private void OnDrawGizmosSelected()
     {
-        Vector3 rayOrigin = transform.position + raycastOffset;
+        Vector3 rayOrigin = transform.position + bottomOffset + raycastOffset;
         Gizmos.color = isGrounded ? Color.green : Color.red;
         Gizmos.DrawLine(rayOrigin, rayOrigin + Vector3.down * raycastDistance);
 

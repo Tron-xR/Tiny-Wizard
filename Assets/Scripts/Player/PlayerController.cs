@@ -21,10 +21,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float sprintAcceleration = 25f;
 
     [Header("Jump")]
-    [SerializeField] private float jumpForce = 5f;
+    [SerializeField] private float jumpForce = 7f;
     [SerializeField] private float jumpCooldown = 0.1f;
-    [SerializeField] private float airDrag = 0f;
-    [SerializeField] private float groundDrag = 4f;
 
     [Header("Rotation")]
     [SerializeField] private float rotationSmoothTime = 0.1f;
@@ -52,7 +50,6 @@ public class PlayerController : MonoBehaviour
         if (inputHandler != null)
             inputHandler.JumpPressed += OnJumpRequested;
 
-        rb.linearDamping = 0f;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
     }
@@ -65,12 +62,18 @@ public class PlayerController : MonoBehaviour
 
     private void OnJumpRequested()
     {
-        if (!groundChecker.IsGrounded) return;
         if (Time.time - lastJumpTime < jumpCooldown) return;
 
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
-        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+        if (!groundChecker.IsGrounded)
+        {
+            Debug.Log("Jump blocked: not grounded");
+            return;
+        }
+
         lastJumpTime = Time.time;
+
+        Vector3 vel = rb.linearVelocity;
+        rb.linearVelocity = new Vector3(vel.x, jumpForce, vel.z);
 
         if (HasValidAnimator())
             animator.SetTrigger("JumpTrigger");
@@ -122,8 +125,6 @@ public class PlayerController : MonoBehaviour
 
         if (rotateToFaceMovement && input.magnitude > 0.01f)
             RotateTowards(desiredDirection);
-
-        rb.linearDamping = groundChecker.IsGrounded ? groundDrag : airDrag;
     }
 
     private void RotateTowards(Vector3 direction)
