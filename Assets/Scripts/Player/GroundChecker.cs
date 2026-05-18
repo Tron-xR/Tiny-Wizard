@@ -3,7 +3,7 @@ using UnityEngine;
 public class GroundChecker : MonoBehaviour
 {
     [Header("Ground Detection")]
-    [SerializeField] private float checkDistance = 1f;
+    [SerializeField] private float checkDistance = 0f;
     [SerializeField] private float checkRadius = 0.3f;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Vector3 offset = Vector3.zero;
