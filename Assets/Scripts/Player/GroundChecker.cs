@@ -21,6 +21,7 @@ public class GroundChecker : MonoBehaviour
     private bool wasGrounded;
     private RaycastHit groundHit;
     private const float GROUND_BUFFER_TIME = 0.05f;
+    private const float SKIN_OFFSET = 0.05f;
     private float lastGroundedTime = -10f;
     private Vector3 bottomOffset = Vector3.zero;
 
@@ -40,11 +41,11 @@ public class GroundChecker : MonoBehaviour
         playerCollider = GetComponent<Collider>();
 
         if (playerCollider is CapsuleCollider capsule)
-            bottomOffset = Vector3.down * (capsule.height * 0.5f - capsule.center.y);
+            bottomOffset = Vector3.down * (capsule.height * 0.5f - capsule.center.y - SKIN_OFFSET);
         else if (playerCollider is BoxCollider box)
-            bottomOffset = Vector3.down * (box.size.y * 0.5f - box.center.y);
+            bottomOffset = Vector3.down * (box.size.y * 0.5f - box.center.y - SKIN_OFFSET);
         else if (playerCollider is SphereCollider sphere)
-            bottomOffset = Vector3.down * sphere.radius;
+            bottomOffset = Vector3.down * (sphere.radius - SKIN_OFFSET);
 
         if (groundLayer == 0)
             groundLayer = ~0;
