@@ -61,17 +61,26 @@ public class PlayerController : MonoBehaviour
 
     private void HandleJump()
     {
-        if (inputHandler == null) return;
-        if (!inputHandler.ConsumeJump()) return;
+        if (inputHandler == null)
+        {
+            Debug.LogWarning("Jump: inputHandler is null");
+            return;
+        }
+
+        bool wantsJump = inputHandler.ConsumeJump();
+        if (!wantsJump) return;
+
+        Debug.Log("<color=yellow>Jump requested. Grounded=" + groundChecker.IsGrounded + "</color>");
+
         if (!groundChecker.IsGrounded)
         {
-            Debug.Log("Jump blocked: not grounded");
+            Debug.Log("<color=red>Jump blocked: not grounded</color>");
             return;
         }
 
         Vector3 vel = rb.linearVelocity;
         rb.linearVelocity = new Vector3(vel.x, jumpForce, vel.z);
-        Debug.Log("Jumped! velocity.y = " + jumpForce);
+        Debug.Log("<color=lime>JUMP SUCCESS! velocity.y set to " + jumpForce + "</color>");
 
         if (HasValidAnimator())
             animator.SetTrigger("JumpTrigger");

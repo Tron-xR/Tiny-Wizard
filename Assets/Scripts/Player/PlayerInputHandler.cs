@@ -160,6 +160,7 @@ public class PlayerInputHandler : MonoBehaviour
     {
         if (jumpRequested)
         {
+            Debug.Log("<color=green>InputHandler: Jump consumed!</color>");
             jumpRequested = false;
             return true;
         }
@@ -168,6 +169,7 @@ public class PlayerInputHandler : MonoBehaviour
 
     private void OnJumpPerformed(InputAction.CallbackContext context)
     {
+        Debug.Log("<color=cyan>InputHandler: Jump performed!</color>");
         jumpRequested = true;
         OnJump?.Invoke();
         JumpPressed?.Invoke();
