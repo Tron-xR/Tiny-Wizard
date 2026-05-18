@@ -29,12 +29,17 @@ public class GroundChecker : MonoBehaviour
 
         Collider[] hits = Physics.OverlapSphere(origin, checkRadius, groundLayer);
 
+        Debug.Log("<color=orange>GroundCheck: " + hits.Length + " colliders, rb.y=" + rb.position.y.ToString("F3") + "</color>");
+        for (int i = 0; i < hits.Length; i++)
+            Debug.Log("<color=orange>  [" + i + "] " + hits[i].name + " (trigger=" + hits[i].isTrigger + ")</color>");
+
         isGrounded = false;
         for (int i = 0; i < hits.Length; i++)
         {
             if (hits[i] != playerCollider)
             {
                 isGrounded = true;
+                Debug.Log("<color=lime>Ground detected via: " + hits[i].name + "</color>");
                 break;
             }
         }
