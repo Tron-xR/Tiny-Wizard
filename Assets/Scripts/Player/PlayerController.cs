@@ -50,6 +50,7 @@ public class PlayerController : MonoBehaviour
         if (inputHandler != null)
             inputHandler.JumpPressed += OnJumpRequested;
 
+        rb.linearDamping = 0f;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
     }
