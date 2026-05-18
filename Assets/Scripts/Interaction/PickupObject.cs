@@ -25,7 +25,6 @@ using UnityEngine;
 public class PickupObject : InteractableObject
 {
     [Header("Pickup Settings")]
-    [SerializeField] private float holdDistance = 0.5f;
     [SerializeField] private float followSpeed = 15f;
     [SerializeField] private float rotationSpeed = 10f;
     [SerializeField] private bool usePhysicsWhileHeld = false;

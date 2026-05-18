@@ -47,7 +47,7 @@ public class InteractionSetupHelper
         Camera cam = Camera.main;
         if (cam == null)
         {
-            cam = GameObject.FindObjectOfType<Camera>();
+            cam = GameObject.FindFirstObjectByType<Camera>();
         }
 
         if (cam != null)
@@ -83,7 +83,7 @@ public class InteractionSetupHelper
         so3.ApplyModifiedProperties();
 
         // === 6. CREATE CANVAS + INTERACTION PROMPT ===
-        Canvas canvas = GameObject.FindObjectOfType<Canvas>();
+        Canvas canvas = GameObject.FindFirstObjectByType<Canvas>();
         if (canvas == null)
         {
             GameObject canvasGO = new GameObject("Canvas");
@@ -113,7 +113,7 @@ public class InteractionSetupHelper
 
             promptText = promptGO.AddComponent<Text>();
             promptText.text = "Press E to interact";
-            promptText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            promptText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             promptText.fontSize = 24;
             promptText.alignment = TextAnchor.MiddleCenter;
             promptText.color = Color.white;

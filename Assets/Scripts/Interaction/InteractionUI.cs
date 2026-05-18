@@ -22,7 +22,6 @@ using UnityEngine.UI;
 ///       └── [optional background panel for readability]
 /// 
 /// Inspector defaults:
-/// - Fade Speed: 5 (seconds for the prompt to fade in/out)
 /// - Default Prompt: "Press E to interact" (fallback if no specific text)
 /// - Hidden at start: the prompt starts invisible until needed
 /// </summary>
@@ -32,11 +31,9 @@ public class InteractionUI : MonoBehaviour
     [SerializeField] private Text promptText;
 
     [Header("Display Settings")]
-    [SerializeField] private float fadeSpeed = 5f;
     [SerializeField] private string defaultPrompt = "Press E to interact";
 
     [Header("Colours")]
-    [SerializeField] private Color visibleColor = Color.white;
     [SerializeField] private Color hiddenColor = new Color(1, 1, 1, 0);
 
     // Current prompt string being displayed
