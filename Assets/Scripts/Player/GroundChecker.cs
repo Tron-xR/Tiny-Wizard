@@ -3,52 +3,53 @@ using UnityEngine;
 public class GroundChecker : MonoBehaviour
 {
     [Header("Ground Detection")]
-    [SerializeField] private float checkDistance = 0f;
-    [SerializeField] private float checkRadius = 0.3f;
+    [SerializeField] private float checkDistance = 0.3f;
     [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private Vector3 offset = Vector3.zero;
 
     private Rigidbody rb;
-    private Collider playerCollider;
+    private CapsuleCollider capsuleCollider;
     private bool isGrounded;
+    private float lastGroundDistance;
 
     public bool IsGrounded => isGrounded;
+    public float GroundDistance => lastGroundDistance;
+    public LayerMask GroundLayer => groundLayer;
 
     private void OnEnable()
     {
         rb = GetComponent<Rigidbody>();
-        playerCollider = GetComponent<Collider>();
-
+        capsuleCollider = GetComponent<CapsuleCollider>();
         if (groundLayer == 0)
             groundLayer = ~0;
     }
 
     public void UpdateGroundCheck()
     {
-        Vector3 origin = rb.position + Vector3.down * checkDistance + offset;
+        Vector3 origin = GetFeetPosition() + Vector3.up * 0.1f;
+        int mask = groundLayer & ~(1 << gameObject.layer);
+        RaycastHit hitInfo;
+        isGrounded = Physics.Raycast(origin, Vector3.down, out hitInfo, checkDistance, mask);
+        lastGroundDistance = isGrounded ? hitInfo.distance : checkDistance;
+    }
 
-        Collider[] hits = Physics.OverlapSphere(origin, checkRadius, groundLayer);
+    public Vector3 GetFeetPosition()
+    {
+        float bottomY = rb.position.y + capsuleCollider.center.y - capsuleCollider.height * 0.5f;
+        return new Vector3(rb.position.x, bottomY, rb.position.z);
+    }
 
-        Debug.Log("<color=orange>GroundCheck: " + hits.Length + " colliders, rb.y=" + rb.position.y.ToString("F3") + "</color>");
-        for (int i = 0; i < hits.Length; i++)
-            Debug.Log("<color=orange>  [" + i + "] " + hits[i].name + " (trigger=" + hits[i].isTrigger + ")</color>");
-
-        isGrounded = false;
-        for (int i = 0; i < hits.Length; i++)
-        {
-            if (hits[i] != playerCollider)
-            {
-                isGrounded = true;
-                Debug.Log("<color=lime>Ground detected via: " + hits[i].name + "</color>");
-                break;
-            }
-        }
+    public float GetGroundY()
+    {
+        return isGrounded ? (GetFeetPosition().y + 0.1f - lastGroundDistance) : float.MinValue;
     }
 
     private void OnDrawGizmosSelected()
     {
-        Vector3 origin = transform.position + Vector3.down * checkDistance + offset;
+        if (rb == null || capsuleCollider == null) return;
+        float bottomY = rb.position.y + capsuleCollider.center.y - capsuleCollider.height * 0.5f;
+        Vector3 feetPos = new Vector3(rb.position.x, bottomY + 0.1f, rb.position.z);
         Gizmos.color = isGrounded ? Color.green : Color.red;
-        Gizmos.DrawWireSphere(origin, checkRadius);
+        Gizmos.DrawRay(feetPos, Vector3.down * checkDistance);
+        Gizmos.DrawWireSphere(feetPos + Vector3.down * checkDistance, 0.05f);
     }
 }

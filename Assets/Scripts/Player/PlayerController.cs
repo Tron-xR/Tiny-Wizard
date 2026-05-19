@@ -30,7 +30,9 @@ public class PlayerController : MonoBehaviour
     [Header("Animation")]
     [SerializeField] private float speedAnimationSmoothTime = 0.1f;
 
-    private Vector3 desiredVelocity = Vector3.zero;
+    private CapsuleCollider capsuleCollider;
+    private Vector3 moveVelocity = Vector3.zero;
+    private float verticalVelocity = 0f;
     private float currentSpeed = 0f;
     private float targetSpeed = 0f;
     private float animationSpeed = 0f;
@@ -44,10 +46,13 @@ public class PlayerController : MonoBehaviour
         if (groundChecker == null) groundChecker = GetComponent<GroundChecker>();
         if (inputHandler == null) inputHandler = GetComponent<PlayerInputHandler>();
         if (cameraTransform == null) cameraTransform = Camera.main?.transform;
+        if (capsuleCollider == null) capsuleCollider = GetComponent<CapsuleCollider>();
 
-        rb.linearDamping = 0f;
-        rb.interpolation = RigidbodyInterpolation.Interpolate;
+        rb.isKinematic = true;
+        rb.useGravity = false;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
+        verticalVelocity = 0f;
+        moveVelocity = Vector3.zero;
     }
 
     private void FixedUpdate()
@@ -55,33 +60,27 @@ public class PlayerController : MonoBehaviour
         groundChecker.UpdateGroundCheck();
         HandleMovement();
         HandleJump();
-        ApplyVelocity();
+        ApplyGravity();
+        ApplyMovement();
         UpdateAnimations();
+    }
+
+    private void ApplyGravity()
+    {
+        if (groundChecker.IsGrounded && verticalVelocity <= 0f)
+        {
+            verticalVelocity = 0f;
+            return;
+        }
+        verticalVelocity += Physics.gravity.y * Time.fixedDeltaTime;
     }
 
     private void HandleJump()
     {
-        if (inputHandler == null)
-        {
-            Debug.LogWarning("Jump: inputHandler is null");
-            return;
-        }
+        if (inputHandler == null) return;
+        if (!inputHandler.ConsumeJump() || !groundChecker.IsGrounded) return;
 
-        bool wantsJump = inputHandler.ConsumeJump();
-        if (!wantsJump) return;
-
-        Debug.Log("<color=yellow>Jump requested. Grounded=" + groundChecker.IsGrounded + "</color>");
-
-        if (!groundChecker.IsGrounded)
-        {
-            Debug.Log("<color=red>Jump blocked: not grounded</color>");
-            return;
-        }
-
-        Vector3 vel = rb.linearVelocity;
-        rb.linearVelocity = new Vector3(vel.x, jumpForce, vel.z);
-        Debug.Log("<color=lime>JUMP SUCCESS! velocity.y set to " + jumpForce + "</color>");
-
+        verticalVelocity = jumpForce;
         if (HasValidAnimator())
             animator.SetTrigger("JumpTrigger");
     }
@@ -104,22 +103,21 @@ public class PlayerController : MonoBehaviour
         targetSpeed = isSprinting ? sprintSpeed : moveSpeed;
         if (input.magnitude < 0.01f) targetSpeed = 0f;
 
-        Vector3 currentVelocityXZ = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+        Vector3 currentVelocityXZ = new Vector3(moveVelocity.x, 0, moveVelocity.z);
         currentSpeed = currentVelocityXZ.magnitude;
 
         if (input.magnitude > 0.01f)
         {
-            float currentAcceleration = groundChecker.IsGrounded ? acceleration : airAcceleration;
-            if (isSprinting && groundChecker.IsGrounded) currentAcceleration = sprintAcceleration;
-
-            float speed = Mathf.Lerp(currentSpeed, targetSpeed, currentAcceleration * Time.fixedDeltaTime);
-            desiredVelocity = desiredDirection * speed;
+            float accel = groundChecker.IsGrounded ? acceleration : airAcceleration;
+            if (isSprinting && groundChecker.IsGrounded) accel = sprintAcceleration;
+            float speed = Mathf.Lerp(currentSpeed, targetSpeed, accel * Time.fixedDeltaTime);
+            moveVelocity = desiredDirection * speed;
         }
         else
         {
-            float currentDeceleration = groundChecker.IsGrounded ? deceleration : airDeceleration;
-            float speed = Mathf.Lerp(currentSpeed, 0f, currentDeceleration * Time.fixedDeltaTime);
-            desiredVelocity = currentVelocityXZ.normalized * speed;
+            float decel = groundChecker.IsGrounded ? deceleration : airDeceleration;
+            float speed = Mathf.Lerp(currentSpeed, 0f, decel * Time.fixedDeltaTime);
+            moveVelocity = currentVelocityXZ.normalized * speed;
         }
 
         if (rotateToFaceMovement && input.magnitude > 0.01f)
@@ -133,10 +131,42 @@ public class PlayerController : MonoBehaviour
         rb.MoveRotation(Quaternion.Euler(0, angle, 0));
     }
 
-    private void ApplyVelocity()
+    private void ApplyMovement()
     {
-        float verticalVelocity = rb.linearVelocity.y;
-        rb.linearVelocity = new Vector3(desiredVelocity.x, verticalVelocity, desiredVelocity.z);
+        Vector3 hMove = moveVelocity * Time.fixedDeltaTime;
+        float yMove = verticalVelocity * Time.fixedDeltaTime;
+
+        Vector3 safeH = SlideMove(hMove);
+
+        rb.MovePosition(rb.position + new Vector3(safeH.x, yMove, safeH.z));
+    }
+
+    private Vector3 SlideMove(Vector3 hMove)
+    {
+        if (hMove.magnitude < 0.0001f) return Vector3.zero;
+
+        float radius = capsuleCollider.radius;
+        Vector3 center = rb.position + capsuleCollider.center;
+        float halfH = capsuleCollider.height * 0.5f - capsuleCollider.radius;
+        Vector3 top = center + Vector3.up * halfH;
+        Vector3 bottom = center - Vector3.up * halfH;
+        Vector3 dir = hMove.normalized;
+        float castDist = hMove.magnitude + 0.02f;
+
+        RaycastHit hit;
+        if (Physics.CapsuleCast(top, bottom, radius, dir, out hit, castDist, ~0, QueryTriggerInteraction.Ignore))
+        {
+            if (hit.normal.y > 0.7f)
+                return Vector3.zero;
+
+            float safe = Mathf.Max(0f, hit.distance - 0.02f);
+            safe = Mathf.Min(safe, hMove.magnitude);
+            Vector3 slideDir = Vector3.ProjectOnPlane(dir, hit.normal).normalized;
+            float remaining = hMove.magnitude - safe;
+            return dir * safe + slideDir * remaining;
+        }
+
+        return hMove;
     }
 
     private void UpdateAnimations()
@@ -153,12 +183,16 @@ public class PlayerController : MonoBehaviour
 
     public float GetCurrentSpeed()
     {
-        Vector3 hVel = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
-        return hVel.magnitude;
+        return new Vector3(moveVelocity.x, 0, moveVelocity.z).magnitude;
     }
 
     public bool IsGrounded => groundChecker.IsGrounded;
-    public Vector3 GetVelocity() => rb.linearVelocity;
+    public Vector3 GetVelocity()
+    {
+        Vector3 vel = moveVelocity;
+        vel.y = verticalVelocity;
+        return vel;
+    }
 
     private bool HasValidAnimator()
     {
