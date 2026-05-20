@@ -39,6 +39,9 @@ public class InteractionUI : MonoBehaviour
     // Current prompt string being displayed
     private string currentText = "";
 
+    // Original visible colour to restore when showing the prompt
+    private Color visibleColor;
+
     // ===== INITIALISATION =====
 
     private void OnEnable()
@@ -48,6 +51,7 @@ public class InteractionUI : MonoBehaviour
 
         if (promptText != null)
         {
+            visibleColor = promptText.color;
             promptText.color = hiddenColor;
             promptText.text = defaultPrompt;
         }
@@ -81,6 +85,7 @@ public class InteractionUI : MonoBehaviour
 
         currentText = text;
         promptText.text = text;
+        promptText.color = visibleColor;
     }
 
     /// <summary>
@@ -90,11 +95,9 @@ public class InteractionUI : MonoBehaviour
     {
         if (promptText == null) return;
 
-        if (promptText.text != defaultPrompt)
-        {
-            promptText.text = defaultPrompt;
-            currentText = "";
-        }
+        promptText.text = "";
+        currentText = "";
+        promptText.color = hiddenColor;
     }
 
     /// <summary>

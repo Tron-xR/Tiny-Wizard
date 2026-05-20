@@ -35,9 +35,9 @@ using UnityEngine;
 public class PushableObject : InteractableObject
 {
     [Header("Push Settings")]
-    [SerializeField] private float pushForce = 8f;
+    [SerializeField] private float pushForce = 50f;
     [SerializeField] private float maxPushSpeed = 5f;
-    [SerializeField] private float pushStoppingDistance = 3f;
+    [SerializeField] private float pushStoppingDistance = 5f;
     [SerializeField] private bool requirePlayerMovement = true;
 
     [Header("Camera-Relative Pushing")]
@@ -45,16 +45,22 @@ public class PushableObject : InteractableObject
 
     // Reference components
     private Rigidbody rb;
+    private Collider objectCollider;
+    private Collider playerCollider;
     private InteractionController activeController;
+    private Camera mainCamera;
 
     // State
     private bool isBeingPushed = false;
+    private string originalPromptText;
 
     // ===== INITIALISATION =====
 
     private void OnEnable()
     {
         rb = GetComponent<Rigidbody>();
+        objectCollider = GetComponent<Collider>();
+        mainCamera = Camera.main;
     }
 
     // ===== INTERFACE METHODS =====
@@ -98,7 +104,16 @@ public class PushableObject : InteractableObject
         activeController = controller;
         isBeingPushed = true;
 
+        originalPromptText = promptText;
         SetPromptText("Release");
+
+        // Ignore collision so the player doesn't slide when pushing
+        if (objectCollider != null)
+        {
+            playerCollider = controller.GetComponentInChildren<Collider>();
+            if (playerCollider != null)
+                Physics.IgnoreCollision(objectCollider, playerCollider, true);
+        }
     }
 
     /// <summary>
@@ -108,10 +123,15 @@ public class PushableObject : InteractableObject
     {
         if (!isBeingPushed) return;
 
+        // Restore collision with the player
+        if (objectCollider != null && playerCollider != null)
+            Physics.IgnoreCollision(objectCollider, playerCollider, false);
+
         isBeingPushed = false;
         activeController = null;
+        playerCollider = null;
 
-        SetPromptText("Push");
+        SetPromptText(originalPromptText);
     }
 
     // ===== FIXED UPDATE (physics-based pushing) =====
@@ -139,10 +159,10 @@ public class PushableObject : InteractableObject
         // Calculate push direction
         Vector3 pushDir;
 
-        if (pushInLookDirection && Camera.main != null)
+        if (pushInLookDirection && mainCamera != null)
         {
             // Push in the camera's forward direction (projected to XZ plane)
-            pushDir = Camera.main.transform.forward;
+            pushDir = mainCamera.transform.forward;
             pushDir.y = 0f;
             pushDir.Normalize();
         }

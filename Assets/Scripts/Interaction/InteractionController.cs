@@ -28,8 +28,12 @@ public class InteractionController : MonoBehaviour
     [SerializeField] private Transform holdPoint;
     [SerializeField] private PlayerInputHandler inputHandler;
 
+    [Header("Hold Settings")]
+    [SerializeField] private Vector3 holdPosition = new Vector3(0, 1.6f, 2.2f);
+
     [Header("Raycast Settings")]
     [SerializeField] private float maxInteractionDistance = 5f;
+    [SerializeField] private float interactionRadius = 0.5f;
     [SerializeField] private LayerMask interactionLayer = -1;
 
     // The object the player is currently looking at
@@ -57,7 +61,7 @@ public class InteractionController : MonoBehaviour
         {
             GameObject hp = new GameObject("HoldPoint");
             hp.transform.SetParent(transform);
-            hp.transform.localPosition = new Vector3(0, 1.2f, 1f);
+            hp.transform.localPosition = holdPosition;
             holdPoint = hp.transform;
         }
     }
@@ -87,15 +91,45 @@ public class InteractionController : MonoBehaviour
 
         if (interactionCamera == null) return;
 
+        // Use a longer raycast to reach objects even when the camera is zoomed out.
+        // Final distance check is relative to the player, not the camera.
+        float rayLength = maxInteractionDistance + Vector3.Distance(transform.position, interactionCamera.transform.position);
+
         Ray ray = new Ray(interactionCamera.transform.position, interactionCamera.transform.forward);
 
-        if (Physics.Raycast(ray, out RaycastHit hit, maxInteractionDistance, interactionLayer))
+        if (Physics.SphereCast(ray, interactionRadius, out RaycastHit hit, rayLength, interactionLayer))
         {
-            IInteractable interactable = hit.collider.GetComponent<IInteractable>();
+            IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
 
             if (interactable != null && interactable.CanInteract)
             {
-                currentFocus = interactable;
+                float playerDist = Vector3.Distance(transform.position, interactable.InteractionTransform.position);
+                if (playerDist <= interactable.InteractionDistance)
+                {
+                    currentFocus = interactable;
+                }
+            }
+        }
+
+        // Fallback: sweep for small objects near the camera view
+        if (currentFocus == null)
+        {
+            Vector3 camPos = interactionCamera.transform.position;
+            Vector3 camEnd = camPos + interactionCamera.transform.forward * rayLength;
+            Collider[] nearby = Physics.OverlapCapsule(camPos, camEnd, interactionRadius * 3f, interactionLayer);
+
+            foreach (Collider col in nearby)
+            {
+                IInteractable interactable = col.GetComponentInParent<IInteractable>();
+                if (interactable != null && interactable.CanInteract)
+                {
+                    float playerDist = Vector3.Distance(transform.position, col.transform.position);
+                    if (playerDist <= interactable.InteractionDistance)
+                    {
+                        currentFocus = interactable;
+                        break;
+                    }
+                }
             }
         }
 

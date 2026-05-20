@@ -27,6 +27,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float rotationSmoothTime = 0.1f;
     [SerializeField] private bool rotateToFaceMovement = true;
 
+    [Header("Collision")]
+    [SerializeField] private LayerMask obstacleMask = -1;
+
     [Header("Animation")]
     [SerializeField] private float speedAnimationSmoothTime = 0.1f;
 
@@ -154,7 +157,7 @@ public class PlayerController : MonoBehaviour
         float castDist = hMove.magnitude + 0.02f;
 
         RaycastHit hit;
-        if (Physics.CapsuleCast(top, bottom, radius, dir, out hit, castDist, ~0, QueryTriggerInteraction.Ignore))
+        if (Physics.CapsuleCast(top, bottom, radius, dir, out hit, castDist, obstacleMask, QueryTriggerInteraction.Ignore))
         {
             if (hit.normal.y > 0.7f)
                 return Vector3.zero;
@@ -187,6 +190,13 @@ public class PlayerController : MonoBehaviour
     }
 
     public bool IsGrounded => groundChecker.IsGrounded;
+
+    public void Launch(Vector3 velocity)
+    {
+        moveVelocity = new Vector3(velocity.x, 0, velocity.z);
+        verticalVelocity = Mathf.Max(velocity.y, verticalVelocity);
+    }
+
     public Vector3 GetVelocity()
     {
         Vector3 vel = moveVelocity;

@@ -38,10 +38,11 @@ public class PickupObject : InteractableObject
     private Rigidbody rb;
     private Collider objectCollider;
     private InteractionController activeController;
+    private Camera mainCamera;
 
     // State
     private bool isHeld = false;
-    private Vector3 holdOffset = Vector3.zero;
+    private string originalPromptText;
 
     // ===== INITIALISATION =====
 
@@ -49,6 +50,7 @@ public class PickupObject : InteractableObject
     {
         rb = GetComponent<Rigidbody>();
         objectCollider = GetComponent<Collider>();
+        mainCamera = Camera.main;
     }
 
     // ===== INTERFACE METHODS =====
@@ -106,15 +108,15 @@ public class PickupObject : InteractableObject
         if (objectCollider != null)
             objectCollider.isTrigger = usePhysicsWhileHeld;
 
-        // Set transform parent for clean hierarchy
+        // Set transform parent and snap precisely to the hold point
         transform.SetParent(activeController.HoldPoint);
-
-        // Calculate offset relative to hold point
-        holdOffset = activeController.HoldPoint.InverseTransformPoint(transform.position);
+        transform.localPosition = Vector3.zero;
+        transform.localRotation = Quaternion.identity;
 
         isHeld = true;
 
         // Update prompt text to show drop action
+        originalPromptText = promptText;
         SetPromptText("Drop");
     }
 
@@ -148,9 +150,9 @@ public class PickupObject : InteractableObject
             else
             {
                 // Add a small throw force in the camera's forward direction
-                if (activeController != null && Camera.main != null)
+                if (activeController != null && mainCamera != null)
                 {
-                    Vector3 throwDir = Camera.main.transform.forward;
+                    Vector3 throwDir = mainCamera.transform.forward;
                     throwDir.y = 0.25f;
                     rb.AddForce(throwDir * throwForceOnDrop, ForceMode.Impulse);
                 }
@@ -165,7 +167,7 @@ public class PickupObject : InteractableObject
         activeController = null;
 
         // Reset prompt text
-        SetPromptText(promptText);
+        SetPromptText(originalPromptText);
     }
 
     // ===== UPDATE LOOP (when held) =====
@@ -175,8 +177,7 @@ public class PickupObject : InteractableObject
         if (!isHeld || activeController == null || activeController.HoldPoint == null) return;
 
         // Smoothly move to the hold position
-        Vector3 targetPos = activeController.HoldPoint.position + activeController.HoldPoint.TransformDirection(holdOffset);
-        transform.position = Vector3.Lerp(transform.position, targetPos, followSpeed * Time.deltaTime);
+        transform.position = Vector3.Lerp(transform.position, activeController.HoldPoint.position, followSpeed * Time.deltaTime);
 
         // Smoothly match the hold point's rotation
         transform.rotation = Quaternion.Slerp(transform.rotation, activeController.HoldPoint.rotation, rotationSpeed * Time.deltaTime);

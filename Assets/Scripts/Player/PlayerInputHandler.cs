@@ -22,6 +22,9 @@ public class PlayerInputHandler : MonoBehaviour
     private InputAction castSpellAction;
     private InputAction pauseAction;
     private InputAction zoomAction;
+    private InputAction spellSlot1Action;
+    private InputAction spellSlot2Action;
+    private InputAction spellSlot3Action;
 
     // ===== CONTINUOUS INPUT PROPERTIES =====
     // Gameplay systems read these every frame
@@ -52,6 +55,7 @@ public class PlayerInputHandler : MonoBehaviour
     public System.Action InteractPressed;
     public System.Action CastSpellPressed;
     public System.Action PausePressed;
+    public System.Action<int> SpellSlotPressed;
 
     // Polled jump flag (consumed once per press — more reliable than events for physics)
     private bool jumpRequested = false;
@@ -87,6 +91,9 @@ public class PlayerInputHandler : MonoBehaviour
         castSpellAction = actions["CastSpell"];
         pauseAction = actions["Pause"];
         zoomAction = actions["Zoom"];
+        spellSlot1Action = actions["SpellSlot1"];
+        spellSlot2Action = actions["SpellSlot2"];
+        spellSlot3Action = actions["SpellSlot3"];
     }
 
     private void SubscribeToEvents()
@@ -104,6 +111,10 @@ public class PlayerInputHandler : MonoBehaviour
         interactAction.performed += OnInteractPerformed;
         castSpellAction.performed += OnCastSpellPerformed;
         pauseAction.performed += OnPausePerformed;
+
+        spellSlot1Action.performed += OnSpellSlot1Performed;
+        spellSlot2Action.performed += OnSpellSlot2Performed;
+        spellSlot3Action.performed += OnSpellSlot3Performed;
 
         zoomAction.performed += OnZoomPerformed;
         zoomAction.canceled += OnZoomCanceled;
@@ -133,6 +144,10 @@ public class PlayerInputHandler : MonoBehaviour
         if (interactAction != null) interactAction.performed -= OnInteractPerformed;
         if (castSpellAction != null) castSpellAction.performed -= OnCastSpellPerformed;
         if (pauseAction != null) pauseAction.performed -= OnPausePerformed;
+
+        if (spellSlot1Action != null) spellSlot1Action.performed -= OnSpellSlot1Performed;
+        if (spellSlot2Action != null) spellSlot2Action.performed -= OnSpellSlot2Performed;
+        if (spellSlot3Action != null) spellSlot3Action.performed -= OnSpellSlot3Performed;
 
         if (zoomAction != null)
         {
@@ -192,6 +207,10 @@ public class PlayerInputHandler : MonoBehaviour
         OnPause?.Invoke();
         PausePressed?.Invoke();
     }
+
+    private void OnSpellSlot1Performed(InputAction.CallbackContext context) => SpellSlotPressed?.Invoke(0);
+    private void OnSpellSlot2Performed(InputAction.CallbackContext context) => SpellSlotPressed?.Invoke(1);
+    private void OnSpellSlot3Performed(InputAction.CallbackContext context) => SpellSlotPressed?.Invoke(2);
 
     private void OnZoomPerformed(InputAction.CallbackContext context) => ZoomInput = context.ReadValue<float>();
     private void OnZoomCanceled(InputAction.CallbackContext context) => ZoomInput = 0f;
