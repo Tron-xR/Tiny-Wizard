@@ -1,14 +1,11 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class AttackSpell : SpellBase
 {
     [Header("Damage")]
     [SerializeField] private float damageAmount = 30f;
-
-    [Header("Knockback")]
-    [SerializeField] private float knockbackForce = 10f;
-    [SerializeField] private float knockbackRadius = 2f;
-    [SerializeField] private float upwardModifier = 0.3f;
+    [SerializeField] private float hitRadius = 2f;
 
     [Header("Projectile")]
     [SerializeField] private SpellProjectile projectilePrefab;
@@ -17,22 +14,42 @@ public class AttackSpell : SpellBase
     [Header("Layer")]
     [SerializeField] private LayerMask targetLayers = -1;
 
-    private Vector3 castOrigin;
-    private Vector3 castDirection;
-
-    protected override void StartCast(Vector3 origin, Vector3 direction)
-    {
-        castOrigin = origin;
-        castDirection = direction;
-        base.StartCast(origin, direction);
-    }
-
     protected override void ExecuteCast()
     {
         if (projectilePrefab == null) return;
+        if (spellManager == null) return;
 
-        SpellProjectile proj = Instantiate(projectilePrefab, castOrigin, Quaternion.LookRotation(castDirection));
-        proj.Launch(castDirection * projectileSpeed, 0, 0, 0, OnProjectileHit);
+        // Recalculate origin and direction at execution time (not cached from StartCast)
+        // so the projectile fires where the player/camera is aiming right now.
+        Transform originTransform = spellManager.CastOrigin;
+        Vector3 origin = originTransform != null ? originTransform.position : spellManager.transform.position;
+        Vector3 direction = GetCastDirection();
+
+        SpellProjectile proj = Instantiate(projectilePrefab, origin, Quaternion.LookRotation(direction));
+        proj.Launch(direction * projectileSpeed, 0, 0, 0, OnProjectileHit);
+    }
+
+    private Vector3 GetCastDirection()
+    {
+        Camera cam = Camera.main;
+        if (cam == null) return transform.forward;
+
+        // Cast a ray from the camera through the mouse cursor position
+        Vector2 mousePos = Mouse.current.position.ReadValue();
+        Ray ray = cam.ScreenPointToRay(mousePos);
+        Vector3 origin = spellManager.CastOrigin != null
+            ? spellManager.CastOrigin.position
+            : spellManager.transform.position;
+
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, 100f, targetLayers))
+        {
+            // Fire toward the world point under the cursor
+            return (hit.point - origin).normalized;
+        }
+
+        // If nothing under the cursor, fire along the screen-center direction
+        return cam.transform.forward;
     }
 
     private void OnProjectileHit(Vector3 hitPoint)
@@ -44,33 +61,19 @@ public class AttackSpell : SpellBase
 
     private void ApplyHitAt(Vector3 center)
     {
-        Collider[] hits = Physics.OverlapSphere(center, knockbackRadius, targetLayers);
+        Collider[] hits = Physics.OverlapSphere(center, hitRadius, targetLayers);
 
         foreach (Collider hit in hits)
         {
-            Rigidbody rb = hit.GetComponent<Rigidbody>();
-            if (rb != null)
-            {
-                Vector3 forceDir = (hit.transform.position - center).normalized + Vector3.up * upwardModifier;
-                rb.AddForce(forceDir * knockbackForce, ForceMode.Impulse);
-            }
-
             IDamageable damageable = hit.GetComponentInParent<IDamageable>();
             if (damageable != null)
                 damageable.TakeDamage(damageAmount, center, Vector3.up);
-
-            ISpellTarget target = hit.GetComponentInParent<ISpellTarget>();
-            if (target != null)
-            {
-                Vector3 forceDir = (hit.transform.position - center).normalized + Vector3.up * upwardModifier;
-                target.OnPushSpell(forceDir, knockbackForce);
-            }
         }
     }
 
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, knockbackRadius);
+        Gizmos.DrawWireSphere(transform.position, hitRadius);
     }
 }

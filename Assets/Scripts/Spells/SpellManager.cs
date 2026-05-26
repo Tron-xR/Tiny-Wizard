@@ -15,6 +15,8 @@ public class SpellManager : MonoBehaviour
     [SerializeField] private Transform castOrigin;
     [SerializeField] private Animator playerAnimator;
 
+    public Transform CastOrigin => castOrigin;
+
     [Header("Input")]
     [SerializeField] private PlayerInputHandler inputHandler;
 
