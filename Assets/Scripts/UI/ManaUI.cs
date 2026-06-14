@@ -4,8 +4,8 @@ using UnityEngine.UI;
 public class ManaUI : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private Image manaFill;
-    [SerializeField] private Text manaText;
+    public Image manaFill;
+    public Text manaText;
     [SerializeField] private Image spellIcon;
     [SerializeField] private Text spellNameText;
 

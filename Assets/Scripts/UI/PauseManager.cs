@@ -3,7 +3,7 @@ using UnityEngine;
 public class PauseManager : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private GameObject pauseCanvas;
+    public GameObject pauseCanvas;
 
     [Header("Settings")]
     [SerializeField] private KeyCode pauseKey = KeyCode.Escape;
