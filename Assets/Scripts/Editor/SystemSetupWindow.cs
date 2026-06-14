@@ -91,7 +91,7 @@ public class SystemSetupWindow : EditorWindow
         textRT.offsetMin = Vector2.zero;
         textRT.offsetMax = Vector2.zero;
         Text manaText = textGO.AddComponent<Text>();
-        manaText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        manaText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         manaText.fontSize = 18;
         manaText.alignment = TextAnchor.MiddleRight;
         manaText.color = Color.white;
@@ -131,7 +131,7 @@ public class SystemSetupWindow : EditorWindow
         textRT.anchoredPosition = Vector2.zero;
         textRT.sizeDelta = new Vector2(400, 100);
         Text pauseText = textGO.AddComponent<Text>();
-        pauseText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        pauseText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         pauseText.fontSize = 48;
         pauseText.alignment = TextAnchor.MiddleCenter;
         pauseText.color = Color.white;
