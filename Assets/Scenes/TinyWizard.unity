@@ -6048,6 +6048,7 @@ GameObject:
   - component: {fileID: 849415861}
   - component: {fileID: 849415860}
   - component: {fileID: 849415862}
+  - component: {fileID: 849415863}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -6165,6 +6166,35 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &849415863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 849415858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cccb80512186eb3419fb7b71e05b5df9, type: 3}
+  m_Name: ThirdPersonCamera
+  m_EditorClassIdentifier: 
+  target: {fileID: 0}
+  cameraPivot: {fileID: 0}
+  inputHandler: {fileID: 0}
+  defaultDistance: 4
+  height: 0.5
+  minDistance: 1
+  maxDistance: 8
+  sensitivity: {x: 4, y: 2}
+  verticalMinAngle: -20
+  verticalMaxAngle: 60
+  invertY: 0
+  followSmoothTime: 0.15
+  zoomSmoothTime: 0.2
+  zoomSpeed: 5
+  obstacleLayers: -1
+  collisionRadius: 0.3
+  collisionSmoothTime: 0.1
 --- !u!1 &890750485
 GameObject:
   m_ObjectHideFlags: 0
@@ -7833,6 +7863,7 @@ GameObject:
   - component: {fileID: 1017788642}
   - component: {fileID: 1017788650}
   - component: {fileID: 1017788651}
+  - component: {fileID: 1017788652}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -8028,7 +8059,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 545831044}
-  - {fileID: 1887363565}
   - {fileID: 1779929068}
   - {fileID: 375842263}
   - {fileID: 479349561}
@@ -8081,6 +8111,25 @@ MonoBehaviour:
   castOrigin: {fileID: 793713028}
   playerAnimator: {fileID: 1017788645}
   inputHandler: {fileID: 1017788644}
+--- !u!114 &1017788652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1017788641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e7930f86f72ba3429f3ff98a7919c91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  maxHealth: 100
+  invincibilityTime: 1
+  enableHitFlash: 1
+  playerRenderer: {fileID: 0}
+  hitFlashColor: {r: 1, g: 0, b: 0, a: 1}
+  hitFlashDuration: 0.1
+  respawnDelay: 3
 --- !u!1 &1024255770
 GameObject:
   m_ObjectHideFlags: 0
@@ -14723,37 +14772,7 @@ Material:
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
---- !u!1 &1887363564
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1887363565}
-  m_Layer: 0
-  m_Name: CameraTarget
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1887363565
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1887363564}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.6, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1017788649}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+
 --- !u!21 &1903388270
 Material:
   serializedVersion: 8

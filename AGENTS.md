@@ -6,6 +6,55 @@
   - Tag: Untagged
   - Layer: Default
 
+## Player Animation Setup (session end)
+
+### FBX Clips
+- `Assets/Animations/PlayerAnimation.fbx` — 4 clips configured by setup script:
+  - idle (frames 0–56)
+  - walk (frames 56–130)
+  - run (frames 130–190)
+  - jump (frames 190–247)
+- Generic animation type
+
+### Animator Controller
+- `Assets/Animations/PlayerController.controller` — created by setup script
+- States: Idle, Walk, Run, Jump, Fall
+- Parameters: `Speed` (float), `IsGrounded` (bool), `JumpTrigger` (trigger) — matches PlayerController
+- Transitions: Speed-based idle↔walk↔run, JumpTrigger → Jump → IsGrounded check → Fall → grounded
+
+### Setup
+1. Run `Tiny Wizard > Replace Player Model` — replaces the cube with the FBX model, moves Animator to model, re-creates CastOrigin
+2. Run `Tiny Wizard > Setup Player Animations` — configures FBX clips, creates controller, assigns clips, and wires to model Animator
+
+## Player Health System State (session end)
+
+### Architecture
+- `PlayerHealth` (`Assets/Scripts/Player/PlayerHealth.cs`) — implements `IDamageable`, handles HP, invincibility frames, hit flash, death/respawn, events
+- `HealthUI` (`Assets/Scripts/UI/HealthUI.cs`) — filled Image health bar with color tiers, text readout, death overlay, smoothing
+- PlayerHealth auto-finds Renderer for hit flash, HealthUI auto-finds PlayerHealth
+
+### Events
+- `OnHealthChanged(float current, float max)` — UI subscribes to this
+- `OnPlayerDeath` / `OnPlayerRespawn`
+
+### Setup (Unity Editor)
+1. Open `Tools > Health System Setup`
+2. Click "Add PlayerHealth to Player" (already added to scene YAML, but run for Renderer reference)
+3. Click "Create Health UI" — creates HealthUI + HealthBar_Fill + HealthText under Canvas
+4. Click "Wire Everything" — confirms connections
+
+### Defaults
+- Max HP: 100
+- Invincibility: 1s after hit
+- Respawn delay: 3s
+- Health bar color tiers: green (>60%), yellow (30-60%), red (<30%)
+
+## Camera Fix (session end)
+- ThirdPersonCamera was missing from Main Camera (added to scene YAML)
+- Duplicate CameraTarget child under Player removed (kept fileID 375842262)
+- CameraPivot remains a root GameObject (TryFindReferences auto-finds it)
+- CameraTarget localPosition: (0, 0.6, 0) under Player
+
 ## Interaction System State (session end)
 
 ### Detection
