@@ -19,8 +19,6 @@ public class AttackSpell : SpellBase
         if (projectilePrefab == null) return;
         if (spellManager == null) return;
 
-        // Recalculate origin and direction at execution time (not cached from StartCast)
-        // so the projectile fires where the player/camera is aiming right now.
         Transform originTransform = spellManager.CastOrigin;
         Vector3 origin = originTransform != null ? originTransform.position : spellManager.transform.position;
         Vector3 direction = GetCastDirection();
@@ -34,7 +32,6 @@ public class AttackSpell : SpellBase
         Camera cam = Camera.main;
         if (cam == null) return transform.forward;
 
-        // Cast a ray from the camera through the mouse cursor position
         Vector2 mousePos = Mouse.current.position.ReadValue();
         Ray ray = cam.ScreenPointToRay(mousePos);
         Vector3 origin = spellManager.CastOrigin != null
@@ -44,11 +41,9 @@ public class AttackSpell : SpellBase
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, 100f, targetLayers))
         {
-            // Fire toward the world point under the cursor
             return (hit.point - origin).normalized;
         }
 
-        // If nothing under the cursor, fire along the screen-center direction
         return cam.transform.forward;
     }
 

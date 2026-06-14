@@ -32,8 +32,8 @@ ModelImporter:
     clipAnimations:
     - serializedVersion: 16
       name: idle
-      takeName: idle
-      internalID: -5252816984213320552
+      takeName: 
+      internalID: 3060610079319413300
       firstFrame: 0
       lastFrame: 56
       wrapMode: 0
@@ -61,8 +61,8 @@ ModelImporter:
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
       name: walk
-      takeName: walk
-      internalID: -3419257869308726280
+      takeName: 
+      internalID: -6004787696405322892
       firstFrame: 56
       lastFrame: 130
       wrapMode: 0
@@ -90,8 +90,8 @@ ModelImporter:
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
       name: run
-      takeName: run
-      internalID: 6200578666267062213
+      takeName: 
+      internalID: -5880667880897408871
       firstFrame: 130
       lastFrame: 190
       wrapMode: 0
@@ -119,8 +119,8 @@ ModelImporter:
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
       name: jump
-      takeName: jump
-      internalID: -2993534804863918692
+      takeName: 
+      internalID: -8025109807753351146
       firstFrame: 190
       lastFrame: 247
       wrapMode: 0
